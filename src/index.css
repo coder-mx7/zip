@@ -1,0 +1,18 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-cairo: "Cairo", sans-serif;
+  --color-gold-400: #FBBF24;
+  --color-gold-500: #D4AF37;
+  --color-gold-600: #B4942D;
+  --color-luxury-purple: #1a0b2e;
+  --color-luxury-dark: #0a0a0a;
+  --color-luxury-card: #141414;
+  --color-luxury-border: #2a2a2a;
+}
+
+body {
+  background-color: var(--color-luxury-dark);
+  color: #ffffff;
+}
