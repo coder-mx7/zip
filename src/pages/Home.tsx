@@ -122,19 +122,21 @@ export default function Home() {
                 transition={{ duration: 0.6, delay: 0.3 }}
                 className="flex flex-col sm:flex-row items-center gap-4"
               >
+                {user && (user.role === 'student' || user.role === 'shop') && (
+                  <Link
+                    to="/create-plan"
+                    className="w-full sm:w-auto px-10 py-5 rounded-full font-black text-xl bg-gradient-to-r from-[var(--color-gold-400)] via-[var(--color-gold-500)] to-orange-500 text-black hover:scale-105 transition-all shadow-[0_0_40px_rgba(234,179,8,0.6)] flex items-center justify-center gap-3 group"
+                  >
+                    🚀 إنشاء خطة بحثية مخصصة
+                    <ArrowLeft className="w-7 h-7 group-hover:-translate-x-2 transition-transform" />
+                  </Link>
+                )}
                 <Link
                   to={user ? (user.role === 'admin' ? '/admin' : '/student') : '/login'}
-                  className="w-full sm:w-auto px-8 py-4 rounded-full font-bold text-lg bg-gradient-to-r from-[var(--color-gold-400)] to-[var(--color-gold-600)] text-black hover:scale-105 transition-all shadow-[0_0_40px_rgba(234,179,8,0.5)] flex items-center justify-center gap-2 group"
+                  className="w-full sm:w-auto px-8 py-4 rounded-full font-bold text-lg bg-white/10 text-white hover:bg-white/20 border border-white/20 transition-all flex items-center justify-center backdrop-blur-md"
                 >
-                  ابدأ الآن مجاناً
-                  <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+                  لوحة التحكم
                 </Link>
-                <a
-                  href="#how-it-works"
-                  className="w-full sm:w-auto px-8 py-4 rounded-full font-bold text-lg bg-white/5 text-white hover:bg-white/10 border border-white/10 transition-all flex items-center justify-center backdrop-blur-md"
-                >
-                  كيف نعمل؟
-                </a>
               </motion.div>
             </div>
 

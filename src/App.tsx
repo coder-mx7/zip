@@ -11,6 +11,9 @@ import Login from './pages/Login';
 import AdminDashboard from './pages/AdminDashboard';
 import StudentDashboard from './pages/StudentDashboard';
 import StudentHistory from './pages/StudentHistory';
+import SingleDemandPage from './pages/SingleDemandPage';
+import DebugPage from './pages/DebugPage';
+import CustomResearchPlanWizard from './pages/CustomResearchPlanWizard';
 
 const ProtectedRoute = ({ children, role }: { children: React.ReactNode, role: string }) => {
   const { user, loading } = useAuth();
@@ -29,6 +32,9 @@ export default function App() {
           <Route path="/admin" element={<ProtectedRoute role="admin"><AdminDashboard /></ProtectedRoute>} />
           <Route path="/student" element={<ProtectedRoute role="student"><StudentDashboard /></ProtectedRoute>} />
           <Route path="/student/history" element={<ProtectedRoute role="student"><StudentHistory /></ProtectedRoute>} />
+          <Route path="/create-plan" element={<ProtectedRoute role="student"><CustomResearchPlanWizard /></ProtectedRoute>} />
+          <Route path="/single-demand" element={<ProtectedRoute role="student"><SingleDemandPage /></ProtectedRoute>} />
+          <Route path="/debug" element={<ProtectedRoute role="student"><DebugPage /></ProtectedRoute>} />
           <Route path="/shop" element={<ProtectedRoute role="shop"><StudentDashboard /></ProtectedRoute>} />
           <Route path="/shop/history" element={<ProtectedRoute role="shop"><StudentHistory /></ProtectedRoute>} />
         </Routes>

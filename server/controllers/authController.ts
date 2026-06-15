@@ -10,30 +10,50 @@ const generateToken = (id: string) => {
 };
 
 export const loginAdmin = async (req: Request, res: Response) => {
-  const { email, password } = req.body;
-  const user = await User.findOne({ email, role: 'admin' });
-  if (!user || !(await bcrypt.compare(password, user.password!))) {
-    return res.status(401).json({ error: 'بيانات الدخول غير صحيحة' });
+  try {
+    const { email, password } = req.body;
+    const user = await User.findOne({ email, role: 'admin' });
+    if (!user || !(await bcrypt.compare(password, user.password!))) {
+      return res.status(401).json({ error: 'بيانات الدخول غير صحيحة' });
+    }
+    res.json({ token: generateToken(user._id.toString()), user });
+  } catch (error: any) {
+    console.error('❌ Error in loginAdmin:', error);
+    res.status(500).json({ error: 'حدث خطأ في تسجيل الدخول', details: error.message });
   }
-  res.json({ token: generateToken(user._id.toString()), user });
 };
 
 export const loginStudent = async (req: Request, res: Response) => {
-  const { token } = req.body;
-  const user = await User.findOne({ token, role: 'student' });
-  if (!user) return res.status(401).json({ error: 'رمز الدخول غير صحيح' });
-  res.json({ token: generateToken(user._id.toString()), user });
+  try {
+    const { token } = req.body;
+    const user = await User.findOne({ token, role: 'student' });
+    if (!user) return res.status(401).json({ error: 'رمز الدخول غير صحيح' });
+    res.json({ token: generateToken(user._id.toString()), user });
+  } catch (error: any) {
+    console.error('❌ Error in loginStudent:', error);
+    res.status(500).json({ error: 'حدث خطأ في تسجيل الدخول', details: error.message });
+  }
 };
 
 export const loginShop = async (req: Request, res: Response) => {
-  const { email, password } = req.body;
-  const user = await User.findOne({ email, role: 'shop' });
-  if (!user || !(await bcrypt.compare(password, user.password!))) {
-    return res.status(401).json({ error: 'بيانات الدخول غير صحيحة' });
+  try {
+    const { email, password } = req.body;
+    const user = await User.findOne({ email, role: 'shop' });
+    if (!user || !(await bcrypt.compare(password, user.password!))) {
+      return res.status(401).json({ error: 'بيانات الدخول غير صحيحة' });
+    }
+    res.json({ token: generateToken(user._id.toString()), user });
+  } catch (error: any) {
+    console.error('❌ Error in loginShop:', error);
+    res.status(500).json({ error: 'حدث خطأ في تسجيل الدخول', details: error.message });
   }
-  res.json({ token: generateToken(user._id.toString()), user });
 };
 
 export const getMe = async (req: any, res: Response) => {
-  res.json(req.user);
+  try {
+    res.json(req.user);
+  } catch (error: any) {
+    console.error('❌ Error in getMe:', error);
+    res.status(500).json({ error: 'حدث خطأ', details: error.message });
+  }
 };

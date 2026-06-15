@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { FileText, Loader2, Plus, Trash2, GraduationCap, School, UserCheck } from 'lucide-react';
+import { FileText, Loader2, Plus, Trash2, GraduationCap, School, UserCheck, Sparkles } from 'lucide-react';
 import { saveAs } from 'file-saver';
 import SidebarLayout from '../components/SidebarLayout';
 
@@ -130,6 +131,28 @@ export default function StudentDashboard() {
 
   return (
     <SidebarLayout>
+      {/* New Professional Wizard Banner */}
+      <div className="max-w-4xl mx-auto mb-6">
+        <Link 
+          to="/professional-wizard" 
+          className="block bg-gradient-to-r from-purple-600 to-indigo-600 rounded-2xl p-6 shadow-2xl border border-purple-500/30 hover:from-purple-500 hover:to-indigo-500 transition-all group"
+        >
+          <div className="flex items-center justify-between">
+            <div className="text-left">
+              <div className="flex items-center gap-2 mb-2">
+                <Sparkles className="w-6 h-6 text-yellow-300 animate-pulse" />
+                <span className="text-purple-200 font-bold">جديد!</span>
+              </div>
+              <h3 className="text-2xl font-black text-white mb-1">طريقة إنشاء احترافية</h3>
+              <p className="text-purple-200">خطوات منظمة مع تهميش بشكل شيكاغو - جرّبها الآن!</p>
+            </div>
+            <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+              <FileText className="w-8 h-8 text-white" />
+            </div>
+          </div>
+        </Link>
+      </div>
+
       <div className="max-w-4xl mx-auto bg-[var(--color-luxury-card)] shadow-2xl border border-[var(--color-luxury-border)] rounded-2xl overflow-hidden mb-10">
         <div className="px-6 py-8 sm:p-10">
           <header className="mb-10 text-center sm:text-right">

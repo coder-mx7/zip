@@ -15,11 +15,15 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
 
   const studentLinks = [
     { name: 'توليد بحث جديد', path: '/student', icon: PlusCircle },
+    { name: 'مولد المطلب الواحد', path: '/single-demand', icon: BookOpen },
+    { name: '🐛 صفحة التصحيح', path: '/debug', icon: BookOpen },
     { name: 'الأبحاث السابقة', path: '/student/history', icon: History },
   ];
 
   const shopLinks = [
     { name: 'توليد بحث جديد', path: '/shop', icon: PlusCircle },
+    { name: 'مولد المطلب الواحد', path: '/single-demand', icon: BookOpen },
+    { name: '🐛 صفحة التصحيح', path: '/debug', icon: BookOpen },
     { name: 'الأبحاث السابقة', path: '/shop/history', icon: History },
   ];
 

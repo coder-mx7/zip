@@ -41,7 +41,7 @@ const ResearchSchema = new mongoose.Schema({
     hypotheses: [String],
     approach: { type: String, default: 'تحليلي' },
     // ⭐ إضافة المراجع العالمية التي تولد في المرحلة الأولى لتستخدم في كل البحث
-    globalSources: [{ type: String }] 
+    globalSources: [{ id: String, text: String }] 
   },
   settings: {
     depth: { type: String, default: 'standard' },
