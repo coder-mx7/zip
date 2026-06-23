@@ -41,6 +41,8 @@ interface Reference {
 
 interface FullPlan {
   title: string;
+  university: string;
+  universityLogo: string;
   faculty: string;
   department: string;
   introduction: { title: string; content: string; footnotes: { id: string; content: string }[] };
@@ -82,6 +84,7 @@ export default function CustomResearchPlanWizard() {
     try {
       const response = await axios.post('/api/research/custom-simple-plan', {
         title: researchData.title,
+        university: researchData.university,
         faculty: researchData.faculty,
         department: researchData.department
       });
@@ -91,6 +94,8 @@ export default function CustomResearchPlanWizard() {
       
       const transformedPlan: FullPlan = {
         title: researchData.title,
+        university: researchData.university,
+        universityLogo: apiPlan.universityLogo || '/universities/default-university-logo.svg',
         faculty: researchData.faculty,
         department: researchData.department,
         introduction: {
@@ -340,6 +345,16 @@ export default function CustomResearchPlanWizard() {
             </div>
 
             <div className="bg-gradient-to-r from-[var(--color-gold-500)]/20 to-purple-500/20 border border-[var(--color-gold-500)]/30 rounded-2xl p-8 text-center">
+              <div className="flex flex-col items-center justify-center gap-4 mb-6">
+                <img
+                  src={generatedPlan.universityLogo}
+                  alt={generatedPlan.university || 'شعار الجامعة'}
+                  className="w-24 h-24 rounded-2xl border border-[var(--color-gold-500)]/30 bg-white/95 object-contain p-3 shadow-lg"
+                />
+                <div className="text-gray-300 text-base">
+                  {generatedPlan.university || 'جامعة افتراضية'}
+                </div>
+              </div>
               <h2 className="text-3xl md:text-4xl font-black text-white mb-4">
                 {generatedPlan.title}
               </h2>

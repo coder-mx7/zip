@@ -68,6 +68,69 @@ const safeJsonParse = (text: string) => {
     }
 };
 
+const MIN_GLOBAL_SOURCES = 12;
+const DEFAULT_UNIVERSITY_LOGO = '/universities/default-university-logo.svg';
+
+const normalizeSourceId = (value: any, index: number) => {
+    const raw = String(value || `ref_${index + 1}`).trim();
+    return /^ref_\d+$/i.test(raw) ? raw.toLowerCase() : `ref_${index + 1}`;
+};
+
+const normalizeGlobalSources = (sources: any[]): { id: string; text: string }[] => {
+    if (!Array.isArray(sources)) return [];
+
+    const seen = new Set<string>();
+    const normalized = sources
+        .map((source: any, index: number) => {
+            const id = normalizeSourceId(source?.id, index);
+            const text = String(source?.text || source || '').trim();
+            if (!text || seen.has(id)) return null;
+            seen.add(id);
+            return { id, text };
+        })
+        .filter(Boolean) as { id: string; text: string }[];
+
+    return normalized;
+};
+
+const normalizeSubPoints = (subPoints: any[], globalSources: { id: string; text: string }[]) => {
+    const fallbackSourceIds = globalSources.map(source => source.id);
+
+    return (Array.isArray(subPoints) ? subPoints : []).map((subPoint: any, index: number) => {
+        const fallbackSourceId = fallbackSourceIds[index % Math.max(fallbackSourceIds.length, 1)] || 'ref_1';
+        const sourceId = fallbackSourceIds.includes(subPoint?.sourceId)
+            ? subPoint.sourceId
+            : fallbackSourceId;
+
+        return {
+            point: String(subPoint?.point || `الفكرة التحليلية ${index + 1}`).trim(),
+            sourceId,
+            footnote: String(subPoint?.footnote || '').trim()
+        };
+    });
+};
+
+const buildSuggestedFootnotes = (subPoints: { point: string; sourceId: string; footnote: string }[]) => {
+    const unique = new Map<string, string>();
+    subPoints.forEach(subPoint => {
+        if (subPoint.sourceId && subPoint.footnote && !unique.has(subPoint.sourceId)) {
+            unique.set(subPoint.sourceId, subPoint.footnote);
+        }
+    });
+
+    return Array.from(unique.entries()).map(([sourceId, text]) => ({ sourceId, text }));
+};
+
+const formatSubPointsForPrompt = (subPoints: { point: string; sourceId: string; footnote: string }[]) => {
+    if (!Array.isArray(subPoints) || subPoints.length === 0) {
+        return 'لا توجد نقاط فرعية محددة، وسّع التحليل وفق عنوان المطلب فقط.';
+    }
+
+    return subPoints
+        .map((subPoint, index) => `${index + 1}. ${subPoint.point} | المصدر الإلزامي: ${subPoint.sourceId} | التهميش المرجعي: ${subPoint.footnote}`)
+        .join('\n');
+};
+
 // الوظيفة القديمة للتوليد المباشر (للتوافق مع الواجهة البسيطة )
 export const generateResearch = async (req: any, res: Response) => {
     try {
@@ -239,12 +302,18 @@ export const generatePlan = async (req: any, res: Response) => {
 🛑 قوانين لا تقبل الاختراق (Anti-Error Rules):
 1. الرد يجب أن يكون JSON صالحاً (Valid JSON) حصراً.
 2. المنهجية: يجب أن تحتوي الخطة على ${sectionsCount} مباحث، وكل مبحث يحتوي على ${demandsPerSection} مطالب.
-3. المراجع (globalSources): يجب توليد من 5 إلى 8 مصادر "حقيقية أو منطقية جداً" تشمل (كتب، مقالات علمية، مذكرات ماجستير/دكتوراه، ونصوص قانونية جزائرية إن وُجدت).
+3. المراجع (globalSources): يجب توليد ${MIN_GLOBAL_SOURCES} مصدراً على الأقل، ويفضل بين ${MIN_GLOBAL_SOURCES} و15 مصدراً، وتشمل كتباً، مقالات علمية، رسائل جامعية، ونصوصاً قانونية أو تنظيمية جزائرية إن وُجدت.
 4. التنسيق: استخدام نظام شيكاغو (Chicago Style) الصارم في كتابة المراجع.
+5. يمنع منعاً باتاً اختراع أي تهميش خارج قائمة المصادر المولدة في حقل "sources".
+6. كل مصدر في "sources" يجب أن يملك id فريداً بصيغة ref_1, ref_2, ref_3 ... بالتسلسل.
 
 🔬 منطق التهميش (Footnote Logic):
 - التمهيد (opening) والخلاصة (closing) للمطلب: يمنع وضع تهميش فيهما (لأنهما يعبران عن شخصية الباحث).
-- النقاط الفرعية (subPoints): يجب أن تحتوي كل نقطة على تهميشها الخاص المدمج في حقل "footnote".
+- النقاط الفرعية (subPoints): يجب أن تحتوي كل نقطة على:
+   * "point": الفكرة التحليلية نفسها.
+   * "sourceId": معرّف مصدر موجود حصراً داخل "sources".
+   * "footnote": نص تهميش كامل مشتق حصراً من ذلك المصدر نفسه.
+- ممنوع استخدام أي sourceId غير موجود في "sources".
 - قاعدة التهميش المتكرر:
     * الظهور الأول: (الاسم اللقب، عنوان المرجع، المدينة: الدار، السنة، ص X).
     * تكرار مباشر: (المرجع نفسه، ص Y).
@@ -270,14 +339,17 @@ export const generatePlan = async (req: any, res: Response) => {
             "subPoints": [
               {
                 "point": "الفكرة التحليلية الأولى",
+                "sourceId": "ref_1",
                 "footnote": "نص التهميش الكامل المنسق حسب قاعدة شيكاغو والتكرار"
               },
               {
                 "point": "الفكرة التحليلية الثانية",
+                "sourceId": "ref_2",
                 "footnote": "..."
               },
               {
                 "point": "الفكرة التحليلية الثالثة",
+                "sourceId": "ref_3",
                 "footnote": "..."
               }
             ],
@@ -303,7 +375,15 @@ export const generatePlan = async (req: any, res: Response) => {
         const responseContent = result.response.text();
         if (!responseContent) return res.status(500).json({ message: 'فشل الحصول على رد من Gemini' });
 
-        const responseData = JSON.parse(responseContent);
+        const responseData = safeJsonParse(responseContent);
+        const globalSources = normalizeGlobalSources(responseData.sources);
+
+        if (globalSources.length < MIN_GLOBAL_SOURCES) {
+            return res.status(500).json({
+                message: `فشل إنشاء الخطة: الذكاء الاصطناعي أعاد ${globalSources.length} مصادر فقط، بينما الحد الأدنى المطلوب هو ${MIN_GLOBAL_SOURCES}.`
+            });
+        }
+
         const finalPlan: any[] = [];
         let order = 1;
 
@@ -324,14 +404,16 @@ responseData.plan.forEach((item: any) => {
         finalPlan.push({ id: `item_${order}`, title: item.title, type: 'section', order: order++, canEdit: true });
         
         item.demands?.forEach((demand: any) => {
+            const normalizedSubPoints = normalizeSubPoints(demand?.structure?.subPoints || [], globalSources);
             finalPlan.push({
                 id: `item_${order}`,
                 title: demand.title,
                 type: 'demand',
                 // نمرر البيانات المهيكلة كاملة لكي نستخدمها في المرحلة الثانية (التوليد الكثيف)
-                subPoints: demand.structure.subPoints || [],
-                openingDirective: demand.structure.opening,
-                closingDirective: demand.structure.closing,
+                subPoints: normalizedSubPoints,
+                openingDirective: demand?.structure?.opening || '',
+                closingDirective: demand?.structure?.closing || '',
+                suggestedFootnotes: buildSuggestedFootnotes(normalizedSubPoints),
                 order: order++,
                 canEdit: true
             });
@@ -342,16 +424,10 @@ responseData.plan.forEach((item: any) => {
     }
 });
 
-        const globalSources = Array.isArray(responseData.sources) 
-            ? responseData.sources.map((s: any, index: number) => ({
-                id: s.id || `ref_${index + 1}`,
-                text: s.text || s
-            }))
-            : [];
-            
         const newResearch = new Research({
             creatorId: user.id, title, university, faculty, department, level, doctorName,
             students: Array.isArray(students) ? students : [students],
+            universityLogo: DEFAULT_UNIVERSITY_LOGO,
             methodology: { problemStatement: responseData.problemStatement, approach: 'تحليلي', globalSources: globalSources },
             plan: finalPlan,
             status: { stage: 'plan_approval', progress: 30 }
@@ -427,6 +503,9 @@ export const confirmPlan = async (req: any, res: Response) => {
                 content: cleanedContent,
                 status: isCompleted ? 'completed' : (item.status || 'pending'),
                 subPoints: item.subPoints || originalItem?.subPoints || [],
+                openingDirective: item.openingDirective || originalItem?.openingDirective || '',
+                closingDirective: item.closingDirective || originalItem?.closingDirective || '',
+                suggestedFootnotes: item.suggestedFootnotes || originalItem?.suggestedFootnotes || [],
                 order: item.order !== undefined ? item.order : index,
                 canEdit: item.canEdit !== undefined ? item.canEdit : true
             };
@@ -532,17 +611,21 @@ ${sourcesList}
                 const suggestedFootnotesText = item.suggestedFootnotes 
                     ? JSON.stringify(item.suggestedFootnotes) 
                     : '[]';
+                const formattedSubPoints = formatSubPointsForPrompt(item.subPoints || []);
                 prompt = `العنوان الرئيسي للبحث: "${research.title}"
 الإشكالية البحثية: "${research.methodology?.problemStatement}"
 العنصر الحالي الذي نريد توليده الآن:
 - العنوان: "${item.title}"
 - النوع: ${item.type}
-- النقاط الفرعية (subPoints) التي يجب تغطيتها: [${item.subPoints?.join("، ") || "توسع في شرح العنوان سياقياً"}]
+- التمهيد المطلوب قبل التحليل: ${item.openingDirective || "اكتب تمهيداً أكاديمياً قصيراً يهيئ للمطلب بدون تهميش."}
+- النقاط الفرعية (subPoints) التي يجب تغطيتها حصراً:
+${formattedSubPoints}
+- الخلاصة المطلوبة في نهاية المطلب: ${item.closingDirective || "اختم المطلب بخلاصة تحليلية موجزة بدون تهميش."}
 - التهميشات المقترحة لهذا العنصر: [${suggestedFootnotesText}]
 المراجع المتاحة (من globalSources):
 ${sourcesList}
 سياق القسم السابق للربط المنطقي: "...${previousContext}"
-المطلوب: اكتب محتوى تفصيلياً لهذا العنصر فقط، مع الالتزام الكامل بالقواعد، وربط التهميشات بالمراجع المقترحة.`;
+المطلوب: اكتب محتوى تفصيلياً لهذا العنصر فقط، مع الالتزام الكامل بالقواعد، وربط كل تهميش حصراً بالمصادر المذكورة أعلاه دون الخروج عنها.`;
             }
             else if (item.type === 'conclusion') {
                 prompt = `العنوان الرئيسي للبحث: "${research.title}"
@@ -903,7 +986,7 @@ ${sourceId}: ${globalSources[0].text}
 // ============================================================
 export const generateCustomSimplePlan = async (req: any, res: Response) => {
     try {
-        const { title, faculty, department } = req.body;
+        const { title, faculty, department, university } = req.body;
         const user = req.user;
 
         // نقاط اختيارية - يمكننا إضافة خصم النقاط لاحقاً أو تركها مجانية للتجربة
@@ -921,12 +1004,16 @@ export const generateCustomSimplePlan = async (req: any, res: Response) => {
 🛑 قوانين لا تقبل الاختراق (Anti-Error Rules):
 1. الرد يجب أن يكون JSON صالحاً (Valid JSON) حصراً.
 2. المنهجية: يجب أن تحتوي الخطة على 2 مباحث، وكل مبحث يحتوي على 2 مطالب.
-3. المراجع (sources): يجب توليد من 6 إلى 8 مصادر "حقيقية أو منطقية جداً" تشمل (كتب، مقالات علمية، مذكرات ماجستير/دكتوراه).
+3. المراجع (sources): يجب توليد ${MIN_GLOBAL_SOURCES} مصدراً على الأقل، ويفضل بين ${MIN_GLOBAL_SOURCES} و15 مصدراً، تشمل كتباً، مقالات علمية، رسائل جامعية، ونصوصاً تنظيمية إذا كانت مناسبة.
 4. التنسيق: استخدام نظام شيكاغو (Chicago Style) الصارم في كتابة المراجع.
 5. كل مطلب يجب أن يحتوي على: تمهيد (opening)، 3 نقاط فرعية (subPoints) مع تهميش لكل نقطة، وخاتمة (closing) للمطلب.
+6. كل التهميشات يجب أن تُشتق حصراً من قائمة "sources" نفسها، ويمنع اختراع أي مرجع جديد داخل المطالب.
 
 🔬 منطق التهميش (Footnote Logic):
-- النقاط الفرعية (subPoints): يجب أن تحتوي كل نقطة على حقل "footnote" يحتوي على نص التهميش الكامل.
+- النقاط الفرعية (subPoints): يجب أن تحتوي كل نقطة على:
+  * "point"
+  * "sourceId" ويجب أن يكون موجوداً حصراً في "sources"
+  * "footnote" ويجب أن يكون مستخرجاً من المصدر نفسه
 - قاعدة التهميش: (الاسم اللقب، عنوان المرجع، المدينة: الدار، السنة، ص X).
 
 المطلوب إرجاع هذا الهيكل بدقة متناهية:
@@ -946,9 +1033,9 @@ export const generateCustomSimplePlan = async (req: any, res: Response) => {
           "title": "المطلب الأول: [عنوان دقيق]",
           "opening": "تمهيد سردي يربط المطلب بالمبحث (بدون تهميش)",
           "subPoints": [
-            { "point": "الفكرة التحليلية الأولى", "footnote": "التهميش الكامل هنا" },
-            { "point": "الفكرة التحليلية الثانية", "footnote": "التهميش الكامل هنا" },
-            { "point": "الفكرة التحليلية الثالثة", "footnote": "التهميش الكامل هنا" }
+            { "point": "الفكرة التحليلية الأولى", "sourceId": "ref_1", "footnote": "التهميش الكامل هنا" },
+            { "point": "الفكرة التحليلية الثانية", "sourceId": "ref_2", "footnote": "التهميش الكامل هنا" },
+            { "point": "الفكرة التحليلية الثالثة", "sourceId": "ref_3", "footnote": "التهميش الكامل هنا" }
           ],
           "closing": "خلاصة استنتاجية للمطلب (بدون تهميش)"
         },
@@ -957,9 +1044,9 @@ export const generateCustomSimplePlan = async (req: any, res: Response) => {
           "title": "المطلب الثاني: [عنوان دقيق]",
           "opening": "تمهيد سردي يربط المطلب بالمبحث (بدون تهميش)",
           "subPoints": [
-            { "point": "الفكرة التحليلية الأولى", "footnote": "التهميش الكامل هنا" },
-            { "point": "الفكرة التحليلية الثانية", "footnote": "التهميش الكامل هنا" },
-            { "point": "الفكرة التحليلية الثالثة", "footnote": "التهميش الكامل هنا" }
+            { "point": "الفكرة التحليلية الأولى", "sourceId": "ref_4", "footnote": "التهميش الكامل هنا" },
+            { "point": "الفكرة التحليلية الثانية", "sourceId": "ref_5", "footnote": "التهميش الكامل هنا" },
+            { "point": "الفكرة التحليلية الثالثة", "sourceId": "ref_6", "footnote": "التهميش الكامل هنا" }
           ],
           "closing": "خلاصة استنتاجية للمطلب (بدون تهميش)"
         }
@@ -974,9 +1061,9 @@ export const generateCustomSimplePlan = async (req: any, res: Response) => {
           "title": "المطلب الأول: [عنوان دقيق]",
           "opening": "تمهيد سردي يربط المطلب بالمبحث (بدون تهميش)",
           "subPoints": [
-            { "point": "الفكرة التحليلية الأولى", "footnote": "التهميش الكامل هنا" },
-            { "point": "الفكرة التحليلية الثانية", "footnote": "التهميش الكامل هنا" },
-            { "point": "الفكرة التحليلية الثالثة", "footnote": "التهميش الكامل هنا" }
+            { "point": "الفكرة التحليلية الأولى", "sourceId": "ref_7", "footnote": "التهميش الكامل هنا" },
+            { "point": "الفكرة التحليلية الثانية", "sourceId": "ref_8", "footnote": "التهميش الكامل هنا" },
+            { "point": "الفكرة التحليلية الثالثة", "sourceId": "ref_9", "footnote": "التهميش الكامل هنا" }
           ],
           "closing": "خلاصة استنتاجية للمطلب (بدون تهميش)"
         },
@@ -985,9 +1072,9 @@ export const generateCustomSimplePlan = async (req: any, res: Response) => {
           "title": "المطلب الثاني: [عنوان دقيق]",
           "opening": "تمهيد سردي يربط المطلب بالمبحث (بدون تهميش)",
           "subPoints": [
-            { "point": "الفكرة التحليلية الأولى", "footnote": "التهميش الكامل هنا" },
-            { "point": "الفكرة التحليلية الثانية", "footnote": "التهميش الكامل هنا" },
-            { "point": "الفكرة التحليلية الثالثة", "footnote": "التهميش الكامل هنا" }
+            { "point": "الفكرة التحليلية الأولى", "sourceId": "ref_10", "footnote": "التهميش الكامل هنا" },
+            { "point": "الفكرة التحليلية الثانية", "sourceId": "ref_11", "footnote": "التهميش الكامل هنا" },
+            { "point": "الفكرة التحليلية الثالثة", "sourceId": "ref_12", "footnote": "التهميش الكامل هنا" }
           ],
           "closing": "خلاصة استنتاجية للمطلب (بدون تهميش)"
         }
@@ -1010,7 +1097,15 @@ export const generateCustomSimplePlan = async (req: any, res: Response) => {
         
         if (!responseContent) return res.status(500).json({ message: 'فشل الحصول على رد من Gemini' });
 
-        let responseData = JSON.parse(responseContent);
+        let responseData = safeJsonParse(responseContent);
+        responseData.sources = normalizeGlobalSources(responseData.sources);
+
+        if (responseData.sources.length < MIN_GLOBAL_SOURCES) {
+            return res.status(500).json({
+                success: false,
+                message: `الخطة التجريبية أعادت ${responseData.sources.length} مصادر فقط، بينما الحد الأدنى المطلوب هو ${MIN_GLOBAL_SOURCES}.`
+            });
+        }
 
         // إذا لم يكن هناك "chapters"، نقوم بتحويل "plan" إلى "chapters"
         if (!responseData.chapters && responseData.plan) {
@@ -1031,15 +1126,12 @@ export const generateCustomSimplePlan = async (req: any, res: Response) => {
                     };
                     demandIndex = 1;
                 } else if (item.type === 'demand' && currentChapter) {
+                    const normalizedSubPoints = normalizeSubPoints(item.subPoints || [], responseData.sources);
                     const demand = {
                         id: `${currentChapter.id}-${demandIndex++}`,
                         title: item.title,
                         opening: item.openingDirective || "تمهيد للمطلب",
-                        subPoints: item.subPoints || [
-                            { point: "نقطة 1", footnote: "مرجع 1" },
-                            { point: "نقطة 2", footnote: "مرجع 2" },
-                            { point: "نقطة 3", footnote: "مرجع 3" }
-                        ],
+                        subPoints: normalizedSubPoints,
                         closing: item.closingDirective || "خاتمة للمطلب"
                     };
                     currentChapter.demands.push(demand);
@@ -1061,9 +1153,23 @@ export const generateCustomSimplePlan = async (req: any, res: Response) => {
             ];
         }
 
+        responseData.chapters = Array.isArray(responseData.chapters)
+            ? responseData.chapters.map((chapter: any) => ({
+                ...chapter,
+                demands: Array.isArray(chapter.demands)
+                    ? chapter.demands.map((demand: any) => ({
+                        ...demand,
+                        subPoints: normalizeSubPoints(demand.subPoints || [], responseData.sources)
+                    }))
+                    : []
+            }))
+            : [];
+
         res.status(200).json({
             success: true,
             title: responseData.title,
+            university: university || '',
+            universityLogo: DEFAULT_UNIVERSITY_LOGO,
             faculty,
             department,
             problemStatement: responseData.problemStatement,

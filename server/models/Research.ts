@@ -1,5 +1,16 @@
 import mongoose from 'mongoose';
 
+const SubPointSchema = new mongoose.Schema({
+  point: { type: String, required: true },
+  sourceId: { type: String, required: true },
+  footnote: { type: String, required: true }
+}, { _id: false });
+
+const SuggestedFootnoteSchema = new mongoose.Schema({
+  sourceId: { type: String, required: true },
+  text: { type: String, required: true }
+}, { _id: false });
+
 const PlanItemSchema = new mongoose.Schema({
   id: { type: String, required: true },
   title: { type: String, required: true },
@@ -16,8 +27,11 @@ const PlanItemSchema = new mongoose.Schema({
     default: 'pending' 
   },
   content: { type: String, default: '' },
-  // ⭐ إضافة حقل النقاط الفرعية (الوقود الذي يغذي الكتابة الطويلة)
-  subPoints: [{ type: String }], 
+  // ⭐ نقاط فرعية مهيكلة مع ربط صارم بالمراجع العالمية
+  subPoints: { type: [SubPointSchema], default: [] },
+  openingDirective: { type: String, default: '' },
+  closingDirective: { type: String, default: '' },
+  suggestedFootnotes: { type: [SuggestedFootnoteSchema], default: [] },
   footnotes: [{ 
     id: Number, 
     text: String,
@@ -34,6 +48,7 @@ const ResearchSchema = new mongoose.Schema({
   department: String,
   level: String,
   doctorName: String,
+  universityLogo: String,
   students: [String],
   discipline: String,
   methodology: {

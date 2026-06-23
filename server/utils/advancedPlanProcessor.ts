@@ -12,30 +12,30 @@ import {
 // 📊 نماذج البيانات (Interfaces)
 // ============================================================
 interface GlobalSource {
-    id: string;
-    text: string;
+    id?: string;
+    text?: string;
 }
 
 interface PlanItem {
     id: string;
-    title: string;
-    type: 'introduction' | 'section' | 'demand' | 'conclusion' | 'references' | 'problem_statement';
-    order: number;
-    status?: 'pending' | 'generating' | 'completed' | 'failed';
+    title?: string;
+    type: string;
+    order?: number;
+    status?: string;
     content?: string;
-    subPoints?: string[];
+    subPoints?: any[];
 }
 
 interface ResearchData {
-    title: string;
+    title?: string;
     university?: string;
     faculty?: string;
     department?: string;
     doctorName?: string;
     students?: string[];
-    methodology: {
-        problemStatement: string;
-        globalSources: GlobalSource[];
+    methodology?: {
+        problemStatement?: string;
+        globalSources?: GlobalSource[];
     };
     plan: PlanItem[];
 }
