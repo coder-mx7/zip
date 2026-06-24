@@ -5,7 +5,6 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import SidebarLayout from '../components/SidebarLayout';
-import axios from 'axios';
 
 interface ResearchData {
   title: string;
@@ -59,7 +58,7 @@ const FACULTIES = [
 ];
 
 export default function CustomResearchPlanWizard() {
-  const { user } = useAuth();
+  const { user, api } = useAuth();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -82,7 +81,7 @@ export default function CustomResearchPlanWizard() {
     setLoading(true);
     
     try {
-      const response = await axios.post('/api/research/custom-simple-plan', {
+      const response = await api.post('/api/research/custom-simple-plan', {
         title: researchData.title,
         university: researchData.university,
         faculty: researchData.faculty,
@@ -91,6 +90,7 @@ export default function CustomResearchPlanWizard() {
 
       const apiPlan = response.data;
       console.log("📥 استجابة API:", apiPlan);
+      console.log("✅ Plan generated successfully");
       
       const transformedPlan: FullPlan = {
         title: researchData.title,

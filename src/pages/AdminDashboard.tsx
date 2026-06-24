@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { Plus, Trash2, Edit2, Check, X, Users, Store } from 'lucide-react';
 import SidebarLayout from '../components/SidebarLayout';
+import { useAuth } from '../context/AuthContext';
 
 export default function AdminDashboard() {
+  const { user, api } = useAuth();
   const [activeTab, setActiveTab] = useState<'students' | 'shops' | 'researches'>('students');
   const [users, setUsers] = useState<any[]>([]);
   const [shops, setShops] = useState<any[]>([]);
   const [researches, setResearches] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   
   // Student form
   const [newName, setNewName] = useState('');
@@ -25,19 +27,22 @@ export default function AdminDashboard() {
 
   const fetchData = async () => {
     setLoading(true);
+    setError(null);
     try {
       if (activeTab === 'students') {
-        const res = await axios.get('/api/admin/students');
+        const res = await api.get('/api/admin/students');
         setUsers(res.data);
       } else if (activeTab === 'shops') {
-        const res = await axios.get('/api/admin/shops');
+        const res = await api.get('/api/admin/shops');
         setShops(res.data);
       } else if (activeTab === 'researches') {
-        const res = await axios.get('/api/admin/research');
+        const res = await api.get('/api/admin/research');
         setResearches(res.data);
       }
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      const errorMsg = err.response?.data?.error || err.message || 'حدث خطأ في جلب البيانات';
+      console.error('❌ Fetch error:', errorMsg);
+      setError(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -51,13 +56,14 @@ export default function AdminDashboard() {
     e.preventDefault();
     if (!newName) return;
     try {
-      await axios.post('/api/admin/students', { name: newName, points: newPoints });
+      await api.post('/api/admin/students', { name: newName, points: newPoints });
       setNewName('');
       setNewPoints(10);
       fetchData();
-    } catch (err) {
-      console.error(err);
-      alert('حدث خطأ أثناء إنشاء الطالب');
+    } catch (err: any) {
+      const errorMsg = err.response?.data?.error || 'حدث خطأ أثناء إنشاء الطالب';
+      console.error('❌ Create student error:', errorMsg);
+      alert(errorMsg);
     }
   };
 
@@ -65,7 +71,7 @@ export default function AdminDashboard() {
     e.preventDefault();
     if (!newShopName || !newShopEmail || !newShopPassword) return;
     try {
-      await axios.post('/api/admin/shops', { 
+      await api.post('/api/admin/shops', { 
         name: newShopName, 
         email: newShopEmail, 
         password: newShopPassword, 
@@ -77,8 +83,9 @@ export default function AdminDashboard() {
       setNewShopPoints(50);
       fetchData();
     } catch (err: any) {
-      console.error(err);
-      alert(err.response?.data?.error || 'حدث خطأ أثناء إنشاء المكتبة');
+      const errorMsg = err.response?.data?.error || 'حدث خطأ أثناء إنشاء المكتبة';
+      console.error('❌ Create shop error:', errorMsg);
+      alert(errorMsg);
     }
   };
 
@@ -86,29 +93,31 @@ export default function AdminDashboard() {
     if (!window.confirm(`هل أنت متأكد من حذف ${role === 'student' ? 'هذا الطالب' : 'هذه المكتبة'}؟ سيتم حذف جميع الأبحاث المرتبطة.`)) return;
     try {
       if (role === 'student') {
-        await axios.delete(`/api/admin/students/${id}`);
+        await api.delete(`/api/admin/students/${id}`);
       } else {
-        await axios.delete(`/api/admin/shops/${id}`);
+        await api.delete(`/api/admin/shops/${id}`);
       }
       fetchData();
-    } catch (err) {
-      console.error(err);
-      alert('حدث خطأ أثناء الحذف');
+    } catch (err: any) {
+      const errorMsg = err.response?.data?.error || 'حدث خطأ أثناء الحذف';
+      console.error('❌ Delete error:', errorMsg);
+      alert(errorMsg);
     }
   };
 
   const handleUpdatePoints = async (id: string, role: 'student' | 'shop') => {
     try {
       if (role === 'student') {
-        await axios.put(`/api/admin/students/${id}/points`, { points: editPoints });
+        await api.put(`/api/admin/students/${id}/points`, { points: editPoints });
       } else {
-        await axios.put(`/api/admin/shops/${id}/points`, { points: editPoints });
+        await api.put(`/api/admin/shops/${id}/points`, { points: editPoints });
       }
       setEditingId(null);
       fetchData();
-    } catch (err) {
-      console.error(err);
-      alert('حدث خطأ أثناء تحديث النقاط');
+    } catch (err: any) {
+      const errorMsg = err.response?.data?.error || 'حدث خطأ أثناء تحديث النقاط';
+      console.error('❌ Update points error:', errorMsg);
+      alert(errorMsg);
     }
   };
 

@@ -1,13 +1,12 @@
 
 import React, { useState } from 'react';
-import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { FileText, Loader2, Plus, Trash2, GraduationCap, School, UserCheck } from 'lucide-react';
 import { saveAs } from 'file-saver';
 import SidebarLayout from '../components/SidebarLayout';
 
 export default function SingleDemandPage() {
-  const { user, updatePoints } = useAuth();
+  const { user, updatePoints, api } = useAuth();
   
   const [demandTitle, setDemandTitle] = useState('');
   const [topic, setTopic] = useState('');
@@ -48,7 +47,7 @@ export default function SingleDemandPage() {
     setGenerating(true);
     
     try {
-      const res = await axios.post('/api/research/single-demand', {
+      const res = await api.post('/api/research/single-demand', {
         demandTitle,
         topic,
         subPoints: validSubPoints,
@@ -63,6 +62,7 @@ export default function SingleDemandPage() {
       saveAs(blob, `${demandTitle}.docx`);
       
       setSuccess('تم توليد المطلب وحفظه بنجاح!');
+      console.log('✅ Single demand generated successfully');
       
       setDemandTitle('');
       setTopic('');

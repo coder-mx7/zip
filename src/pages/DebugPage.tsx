@@ -1,12 +1,13 @@
 
 import React, { useState } from 'react';
-import axios from 'axios';
 import { Loader2, FileText, Plus, Trash2, GraduationCap, School, BookOpen } from 'lucide-react';
 import SidebarLayout from '../components/SidebarLayout';
+import { useAuth } from '../context/AuthContext';
 
 type Mode = 'single' | 'full';
 
 export default function DebugPage() {
+  const { api } = useAuth();
   const [mode, setMode] = useState<Mode>('single');
 
   // Single Demand State
@@ -58,13 +59,14 @@ export default function DebugPage() {
     try {
       if (mode === 'single') {
         const validSubPoints = subPoints.filter(s => s.trim() !== '');
-        const res = await axios.post('/api/research/single-demand/debug', {
+        const res = await api.post('/api/research/single-demand/debug', {
           demandTitle, topic, subPoints: validSubPoints, sourceText
         });
         setDebugData(res.data);
+        console.log('✅ Single demand debug:', res.data);
       } else {
         const validStudents = fullStudents.filter(s => s.trim() !== '');
-        const res = await axios.post('/api/research/generate/debug', {
+        const res = await api.post('/api/research/generate/debug', {
           title: fullTitle,
           university: fullUniversity,
           faculty: fullFaculty,
@@ -75,6 +77,7 @@ export default function DebugPage() {
           citationStyle: fullCitationStyle
         });
         setDebugData(res.data);
+        console.log('✅ Full research debug:', res.data);
       }
     } catch (err: any) {
       const errorMsg = err.response?.data?.message || err.response?.data?.error || err.message;

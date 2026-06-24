@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import axios from 'axios';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { FileText, Loader2, Plus, Trash2, GraduationCap, School, UserCheck, Sparkles } from 'lucide-react';
@@ -22,7 +21,7 @@ const FACULTIES = [
 ];
 
 export default function StudentDashboard() {
-  const { user, updatePoints } = useAuth();
+  const { user, updatePoints, api } = useAuth();
   
   // Form state
   const [title, setTitle] = useState('');
@@ -75,7 +74,7 @@ export default function StudentDashboard() {
     setGenerating(true);
     
     try {
-      const res = await axios.post('/api/research/generate', {
+      const res = await api.post('/api/research/generate', {
         title,
         university,
         faculty,
@@ -94,6 +93,7 @@ export default function StudentDashboard() {
         }
         
         setSuccess('تم توليد البحث وحفظه بنجاح! جاري إعداد ملف الوورد...');
+        console.log('✅ Research generated successfully');
         
         // تحميل الملف تلقائياً بعد التوليد
         await handleDownload(res.data._id, res.data.title);
@@ -107,6 +107,7 @@ export default function StudentDashboard() {
       }
     } catch (err: any) {
       const errorMsg = err.response?.data?.message || err.response?.data?.error || 'حدث خطأ أثناء الاتصال بالسيرفر.';
+      console.error('❌ Generate error:', errorMsg);
       setError(errorMsg);
     } finally {
       setGenerating(false);
@@ -115,7 +116,7 @@ export default function StudentDashboard() {
 
   const handleDownload = async (id: string, researchTitle: string) => {
     try {
-      const res = await axios.get(`/api/research/download/${id}`, {
+      const res = await api.get(`/api/research/download/${id}`, {
         responseType: 'blob'
       });
       
@@ -123,8 +124,10 @@ export default function StudentDashboard() {
         type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' 
       });
       saveAs(blob, `${researchTitle}.docx`);
-    } catch (err) {
-      console.error('Download error:', err);
+      console.log('✅ File downloaded successfully');
+    } catch (err: any) {
+      const errorMsg = err.response?.data?.error || 'فشل التحميل التلقائي';
+      console.error('❌ Download error:', errorMsg);
       setError('تم إنشاء البحث، لكن فشل التحميل التلقائي. يمكنك تحميله من سجل الأبحاث.');
     }
   };

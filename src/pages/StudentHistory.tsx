@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { Download, History } from 'lucide-react';
 import { saveAs } from 'file-saver';
 import SidebarLayout from '../components/SidebarLayout';
+import { useAuth } from '../context/AuthContext';
 
 export default function StudentHistory() {
+  const { api } = useAuth();
   const [history, setHistory] = useState<any[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchHistory();
@@ -14,10 +16,13 @@ export default function StudentHistory() {
 
   const fetchHistory = async () => {
     try {
-      const res = await axios.get('/api/research/history');
+      setError(null);
+      const res = await api.get('/api/research/history');
       setHistory(res.data);
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      const errorMsg = err.response?.data?.error || err.message || 'حدث خطأ في جلب السجل';
+      console.error('❌ Fetch history error:', errorMsg);
+      setError(errorMsg);
     } finally {
       setLoadingHistory(false);
     }
@@ -25,13 +30,15 @@ export default function StudentHistory() {
 
   const handleDownload = async (id: string, researchTitle: string) => {
     try {
-      const res = await axios.get(`/api/research/${id}/word`, {
+      const res = await api.get(`/api/research/${id}/word`, {
         responseType: 'blob'
       });
       saveAs(res.data, `${researchTitle}.docx`);
-    } catch (err) {
-      console.error(err);
-      alert('حدث خطأ أثناء تحميل الملف.');
+      console.log('✅ File downloaded successfully');
+    } catch (err: any) {
+      const errorMsg = err.response?.data?.error || 'حدث خطأ أثناء تحميل الملف';
+      console.error('❌ Download error:', errorMsg);
+      alert(errorMsg);
     }
   };
 
