@@ -43,17 +43,24 @@ const startServer = async () => {
     };
     await seedAdmin();
 
-    // تفعيل CORS بشكل صحيح
+    // تفعيل CORS بشكل ديناميكي اعتمادًا على متغير البيئية CLIENT_URL
+    const allowedOrigins = [
+      'http://localhost:5173',
+      'http://localhost:5174',
+      'http://localhost:3001',
+      process.env.CLIENT_URL,
+    ].filter(Boolean) as string[];
+
     app.use(cors({
-      origin: [
-        'http://localhost:5173',
-        'http://localhost:5174',
-        'http://localhost:3001',
-        process.env.CLIENT_URL || 'http://localhost:5174'
-      ],
+      origin: (origin: any, callback: any) => {
+        // السماح لطلبات بدون Origin (مثل curl أو same-origin)
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.includes(origin)) return callback(null, true);
+        return callback(new Error('Not allowed by CORS'));
+      },
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization']
+      allowedHeaders: ['Content-Type', 'Authorization'],
     }));
 
     app.use(express.json());
@@ -73,8 +80,9 @@ const startServer = async () => {
       });
     });
 
-    if (process.env.NODE_ENV === 'production') {
-      const distPath = path.join(process.cwd(), 'dist');
+    // خدم ملفات الواجهة إذا كانت موجودة في مجلد `dist` سواء في وضع الإنتاج أو أثناء الاختبار
+    const distPath = path.join(process.cwd(), 'dist');
+    if (fs.existsSync(distPath)) {
       app.use(express.static(distPath));
       app.get('*', (req, res) => res.sendFile(path.join(distPath, 'index.html')));
     } else {
