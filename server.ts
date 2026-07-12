@@ -12,6 +12,8 @@ import adminRoutes from './server/routes/adminRoutes.js';
 import researchRoutes from './server/routes/researchRoutes.js';
 import { User } from './server/models/User.js';
 
+const normalizeOrigin = (origin: string) => origin.trim().replace(/\/$/, '');
+
 const startServer = async () => {
   try {
     const app = express();
@@ -43,25 +45,33 @@ const startServer = async () => {
     };
     await seedAdmin();
 
-    // تفعيل CORS بشكل ديناميكي اعتمادًا على متغير البيئية CLIENT_URL
+    // تفعيل CORS بشكل ديناميكي اعتمادًا على متغيرات البيئة وروابط Render الفعلية
     const allowedOrigins = [
       'http://localhost:5173',
       'http://localhost:5174',
       'http://localhost:3001',
       process.env.CLIENT_URL,
-    ].filter(Boolean) as string[];
+      process.env.FRONTEND_URL,
+      process.env.RENDER_EXTERNAL_URL,
+    ]
+      .flatMap(value => (value || '').split(','))
+      .map(value => value.trim())
+      .filter(Boolean)
+      .map(normalizeOrigin);
 
     app.use(cors({
       origin: (origin: any, callback: any) => {
         // السماح لطلبات بدون Origin (مثل curl أو same-origin)
         if (!origin) return callback(null, true);
-        if (allowedOrigins.includes(origin)) return callback(null, true);
-        return callback(new Error('Not allowed by CORS'));
+        const normalizedOrigin = normalizeOrigin(origin);
+        if (allowedOrigins.includes(normalizedOrigin)) return callback(null, true);
+        return callback(new Error(`Not allowed by CORS: ${origin}`));
       },
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'Authorization'],
     }));
+    app.options('*', cors());
 
     app.use(express.json());
     app.use(express.urlencoded({ extended: true }));

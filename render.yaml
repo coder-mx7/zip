@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: copysearch-app
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm run server
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        scope: build,runtime
+        sync: false
+      - key: JWT_SECRET
+        scope: build,runtime
+        sync: false
+      - key: CLIENT_URL
+        scope: build,runtime
+        sync: false
+      - key: FRONTEND_URL
+        scope: build,runtime
+        sync: false
+      - key: VITE_API_URL
+        scope: build,runtime
+        sync: false
+      - key: GEMINI_API_KEY
+        scope: build,runtime
+        sync: false

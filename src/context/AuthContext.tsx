@@ -3,10 +3,11 @@ import axios from 'axios';
 
 const AuthContext = createContext<any>(null);
 
-// إعداد الـ API base URL
-const API_BASE = import.meta.env.VITE_API_URL || 'https://zip-7x7y.onrender.com/';
+// في الإنتاج نستخدم نفس الـ origin الحالي ما لم يتم تمرير API URL صريح.
+const API_BASE = import.meta.env.VITE_API_URL?.replace(/\/$/, '') || (import.meta.env.PROD ? window.location.origin : 'http://localhost:3001');
 const api = axios.create({
   baseURL: API_BASE,
+  withCredentials: true,
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
@@ -14,6 +15,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  
   // التحقق من الـ token عند بدء التطبيق
   useEffect(() => {
     const initAuth = async () => {
@@ -47,6 +49,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       setUser(userData);
       
+      console.log('✅ Admin login successful');
       console.log('✅ Admin login successful');
       return { success: true };
     } catch (err: any) {

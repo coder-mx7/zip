@@ -30,7 +30,7 @@ export default function Home() {
                 <Search className="w-6 h-6 text-black" />
               </div>
               <span className="text-2xl font-black tracking-wider bg-gradient-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent">
-                MX7SARECH
+                linouch
               </span>
             </div>
             
