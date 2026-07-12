@@ -20,18 +20,27 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white font-sans selection:bg-[var(--color-gold-500)] selection:text-black overflow-x-hidden">
+    <div dir="rtl" lang="ar" className="min-h-screen bg-[#050505] text-white font-sans selection:bg-[var(--color-gold-500)] selection:text-black overflow-x-hidden">
       {/* Navbar */}
       <nav className="fixed top-0 w-full z-50 bg-[#050505]/80 backdrop-blur-xl border-b border-white/5 transition-all duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-20">
+          <div className="flex flex-row-reverse justify-between items-center h-20">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-gradient-to-br from-[var(--color-gold-400)] via-[var(--color-gold-500)] to-orange-600 rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(234,179,8,0.3)]">
-                <Search className="w-6 h-6 text-black" />
+              <div className="relative flex items-center justify-center">
+                <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[var(--color-gold-400)]/40 to-orange-600/40 blur-xl" />
+                <div className="relative w-14 h-14 rounded-2xl border border-[var(--color-gold-500)]/40 bg-gradient-to-br from-[#1f1a0f] via-[#2d2310] to-[#0f0b04] flex items-center justify-center shadow-[0_0_30px_rgba(212,175,55,0.35)] ring-1 ring-white/10">
+                  <div className="absolute inset-[4px] rounded-[14px] border border-[var(--color-gold-400)]/30" />
+                  <Sparkles className="w-7 h-7 text-[var(--color-gold-400)]" />
+                </div>
               </div>
-              <span className="text-2xl font-black tracking-wider bg-gradient-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent">
-                linouch
-              </span>
+              <div className="flex flex-col">
+                <span className="text-2xl font-black tracking-[0.25em] bg-gradient-to-r from-white via-[var(--color-gold-400)] to-orange-400 bg-clip-text text-transparent">
+                  linouch
+                </span>
+                <span className="text-[11px] font-semibold uppercase tracking-[0.35em] text-gray-400">
+                  Research Studio
+                </span>
+              </div>
             </div>
             
             <div className="hidden md:flex items-center gap-8 bg-white/5 px-8 py-3 rounded-full border border-white/10">

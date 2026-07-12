@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../context/AuthContext';
-import { LogOut, Menu, X, BookOpen, Users, History, PlusCircle } from 'lucide-react';
+import { LogOut, Menu, X, BookOpen, Users, History, PlusCircle, Sparkles } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
 export default function SidebarLayout({ children }: { children: React.ReactNode }) {
@@ -30,7 +30,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
   const links = user?.role === 'admin' ? adminLinks : user?.role === 'shop' ? shopLinks : studentLinks;
 
   return (
-    <div className="min-h-screen flex bg-[var(--color-luxury-dark)] text-white overflow-hidden">
+    <div dir="rtl" lang="ar" className="min-h-screen flex bg-[var(--color-luxury-dark)] text-white overflow-hidden">
       {/* Mobile Sidebar Overlay */}
       <AnimatePresence>
         {isSidebarOpen && (
@@ -53,9 +53,17 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
         style={{ transform: 'translateX(0)' }} // Override motion for desktop
       >
         <div className="flex items-center justify-between h-16 px-4 border-b border-[var(--color-luxury-border)]">
-          <div className="flex items-center text-[var(--color-gold-500)]">
-            <BookOpen className="w-8 h-8 mr-2" />
-            <span className="text-xl font-bold tracking-wider">CopySearch</span>
+          <div className="flex items-center gap-3 text-[var(--color-gold-500)]">
+            <div className="relative flex items-center justify-center">
+              <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-[var(--color-gold-400)]/30 to-orange-600/30 blur-lg" />
+              <div className="relative w-10 h-10 rounded-xl border border-[var(--color-gold-500)]/40 bg-gradient-to-br from-[#1f1a0f] via-[#2d2310] to-[#0f0b04] flex items-center justify-center shadow-[0_0_20px_rgba(212,175,55,0.25)]">
+                <Sparkles className="w-5 h-5 text-[var(--color-gold-400)]" />
+              </div>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-lg font-black tracking-[0.2em] text-transparent bg-gradient-to-r from-white via-[var(--color-gold-400)] to-orange-400 bg-clip-text">linouch</span>
+              <span className="text-[10px] font-semibold uppercase tracking-[0.3em] text-gray-400">Research Studio</span>
+            </div>
           </div>
           <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden text-gray-400 hover:text-white">
             <X className="w-6 h-6" />
@@ -116,14 +124,16 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
         {/* Top Header */}
-        <header className="bg-[var(--color-luxury-dark)]/80 backdrop-blur-xl border-b border-[var(--color-luxury-border)] h-16 flex items-center justify-between px-4 sm:px-6 lg:px-8 sticky top-0 z-30">
+        <header className="bg-[var(--color-luxury-dark)]/80 backdrop-blur-xl border-b border-[var(--color-luxury-border)] h-16 flex flex-row-reverse items-center justify-between px-4 sm:px-6 lg:px-8 sticky top-0 z-30">
           <div className="flex items-center gap-4">
             <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden text-gray-300 hover:text-white transition-colors">
               <Menu className="w-6 h-6" />
             </button>
-            <div className="lg:hidden flex items-center text-[var(--color-gold-500)]">
-              <BookOpen className="w-6 h-6 ml-2" />
-              <span className="text-lg font-bold tracking-wider">MX7SARECH</span>
+            <div className="lg:hidden flex items-center gap-2 text-[var(--color-gold-500)]">
+              <div className="w-8 h-8 rounded-lg border border-[var(--color-gold-500)]/40 bg-gradient-to-br from-[#1f1a0f] via-[#2d2310] to-[#0f0b04] flex items-center justify-center shadow-[0_0_15px_rgba(212,175,55,0.2)]">
+                <Sparkles className="w-4 h-4 text-[var(--color-gold-400)]" />
+              </div>
+              <span className="text-lg font-black tracking-[0.2em] text-transparent bg-gradient-to-r from-white via-[var(--color-gold-400)] to-orange-400 bg-clip-text">linouch</span>
             </div>
           </div>
 

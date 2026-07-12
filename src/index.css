@@ -12,7 +12,19 @@
   --color-luxury-border: #2a2a2a;
 }
 
+html {
+  direction: rtl;
+}
+
 body {
+  margin: 0;
   background-color: var(--color-luxury-dark);
   color: #ffffff;
+  font-family: var(--font-cairo);
+  direction: rtl;
+  text-align: right;
+}
+
+* {
+  box-sizing: border-box;
 }
