@@ -20,7 +20,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  
+
   // التحقق من الـ token عند بدء التطبيق
   useEffect(() => {
     const initAuth = async () => {
@@ -49,11 +49,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setError(null);
       const res = await api.post('/api/auth/admin/login', { email, password });
       const { token, user: userData } = res.data;
-      
+
       localStorage.setItem('token', token);
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       setUser(userData);
-      
+
       console.log('✅ Admin login successful');
       console.log('✅ Admin login successful');
       return { success: true };
@@ -70,11 +70,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setError(null);
       const res = await api.post('/api/auth/student/login', { token: studentToken });
       const { token, user: userData } = res.data;
-      
+
       localStorage.setItem('token', token);
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       setUser(userData);
-      
+
       console.log('✅ Student login successful');
       return { success: true };
     } catch (err: any) {
@@ -90,11 +90,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setError(null);
       const res = await api.post('/api/auth/shop/login', { email, password });
       const { token, user: userData } = res.data;
-      
+
       localStorage.setItem('token', token);
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       setUser(userData);
-      
+
       console.log('✅ Shop login successful');
       return { success: true };
     } catch (err: any) {
@@ -118,16 +118,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      loading, 
-      error, 
-      loginAdmin, 
-      loginStudent, 
-      loginShop, 
-      logout, 
+    <AuthContext.Provider value={{
+      user,
+      loading,
+      error,
+      loginAdmin,
+      loginStudent,
+      loginShop,
+      logout,
       updatePoints,
-      api 
+      api
     }}>
       {children}
     </AuthContext.Provider>
