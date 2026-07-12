@@ -3,7 +3,7 @@ import { Request, Response, NextFunction } from 'express';
 import { User } from '../models/User.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-key-copysearch';
-
+ 
 export const protect = async (req: any, res: Response, next: NextFunction) => {
   try {
     let token;
