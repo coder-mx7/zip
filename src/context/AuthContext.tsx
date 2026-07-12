@@ -3,12 +3,17 @@ import axios from 'axios';
 
 const AuthContext = createContext<any>(null);
 
-// في الإنتاج نستخدم نفس الـ origin الحالي ما لم يتم تمرير API URL صريح.
-const API_BASE = import.meta.env.VITE_API_URL?.replace(/\/$/, '') || (import.meta.env.PROD ? window.location.origin : 'http://localhost:3001');
+// في الإنتاج نستخدم نفس الدومين الحالي بإرسال الطلبات إلى مسار نسبي.
+const VITE_API_URL = import.meta.env.VITE_API_URL?.replace(/\/$/, '');
+const API_BASE = VITE_API_URL ?? (import.meta.env.PROD ? '' : 'https://zip-7x7y.onrender.com');
 const api = axios.create({
   baseURL: API_BASE,
   withCredentials: true,
 });
+
+if (import.meta.env.PROD) {
+  console.info('🌐 API_BASE:', API_BASE || '(same-origin)', 'VITE_API_URL:', VITE_API_URL || '(not set)');
+}
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<any>(null);
