@@ -59,19 +59,58 @@ const startServer = async () => {
       .filter(Boolean)
       .map(normalizeOrigin);
 
-    app.use(cors({
-      origin: (origin: any, callback: any) => {
-        // السماح لطلبات بدون Origin (مثل curl أو same-origin)
-        if (!origin) return callback(null, true);
-        const normalizedOrigin = normalizeOrigin(origin);
-        if (allowedOrigins.includes(normalizedOrigin)) return callback(null, true);
-        return callback(new Error(`Not allowed by CORS: ${origin}`));
-      },
-      credentials: true,
-      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization'],
-    }));
-    app.options('*', cors());
+    const allowAllCors = process.env.ALLOW_ALL_CORS === 'true';
+
+    if (allowAllCors) {
+      console.warn('⚠️ ALLOW_ALL_CORS=true - permitting all origins temporarily (use only for debugging)');
+      app.use(cors({
+        origin: true,
+        credentials: true,
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+        allowedHeaders: ['Content-Type', 'Authorization'],
+      }));
+      app.options('*', cors());
+    } else {
+      // Build a set of allowed hostnames for a more permissive match (ignores protocol/port differences)
+      const allowedHostnames = allowedOrigins
+        .map(o => {
+          try {
+            return new URL(o).hostname;
+          } catch (e) {
+            return o.replace(/^https?:\/\//, '').replace(/:\d+$/, '');
+          }
+        })
+        .filter(Boolean);
+
+      app.use(cors({
+        origin: (origin: any, callback: any) => {
+          // Allow requests with no Origin (curl, server-to-server, same-origin)
+          console.log('➡️ CORS check - incoming origin:', origin);
+          if (!origin) return callback(null, true);
+
+          // Extract hostname from the incoming origin and compare
+          let incomingHostname = origin;
+          try {
+            incomingHostname = new URL(origin).hostname;
+          } catch (e) {
+            incomingHostname = origin.replace(/^https?:\/\//, '').replace(/:\d+$/, '');
+          }
+
+          console.log('   allowedHostnames:', allowedHostnames);
+          if (allowedHostnames.includes(incomingHostname)) {
+            console.log('   ✅ Origin allowed (hostname match):', incomingHostname);
+            return callback(null, true);
+          }
+
+          console.warn('   ❌ Origin not allowed (hostname mismatch):', incomingHostname);
+          return callback(new Error(`Not allowed by CORS: ${origin}`));
+        },
+        credentials: true,
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+        allowedHeaders: ['Content-Type', 'Authorization'],
+      }));
+      app.options('*', cors());
+    }
 
     app.use(express.json());
     app.use(express.urlencoded({ extended: true }));
