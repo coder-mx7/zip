@@ -86,18 +86,19 @@ export default function StudentDashboard() {
         year: '2025/2026'
       });
       
-      if (res.data) {
+      if (res.data && res.data._id) {
         // تحديث النقاط في الواجهة
         if (res.data.newPoints !== undefined) {
             updatePoints(res.data.newPoints);
         }
-        
-        setSuccess('تم توليد البحث وحفظه بنجاح! جاري إعداد ملف الوورد...');
-        console.log('✅ Research generated successfully');
-        
-        // تحميل الملف تلقائياً بعد التوليد
-        await handleDownload(res.data._id, res.data.title);
-        
+
+        setSuccess('بدأ توليد البحث... يتم الآن كتابة المباحث والمطالب والتهميشات، يرجى الانتظار.');
+        console.log('✅ Research generation started:', res.data._id);
+
+        // ⏳ التوليد يجري في الخلفية على السيرفر (خطة → مباحث → مطالب → مراجع)
+        // نستطلع الحالة حتى تكتمل، ثم نحمّل الملف — لتفادي تحميل ملف ناقص.
+        await pollUntilReady(res.data._id, res.data.title);
+
         // إعادة تهيئة النموذج
         setTitle('');
         setUniversity('');
@@ -112,6 +113,29 @@ export default function StudentDashboard() {
     } finally {
       setGenerating(false);
     }
+  };
+
+  // يستطلع حالة التوليد الخلفي حتى الاكتمال ثم يحمّل الملف تلقائياً
+  const pollUntilReady = async (id: string, researchTitle: string) => {
+    const maxAttempts = 120; // ~6 دقائق كحد أقصى (كل 3 ثوانٍ)
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      try {
+        const statusRes = await api.get(`/api/research/status/${id}`);
+        const stage = statusRes.data?.status?.stage;
+        const progress = statusRes.data?.status?.progress ?? 0;
+
+        if (stage === 'completed') {
+          setSuccess('اكتمل التوليد بنجاح! جاري إعداد ملف الوورد...');
+          await handleDownload(id, researchTitle);
+          return;
+        }
+        setSuccess(`جاري التوليد... (${progress}%)`);
+      } catch (err) {
+        console.error('❌ Poll status error:', err);
+      }
+    }
+    setError('استغرق التوليد وقتاً أطول من المتوقع. يمكنك تحميل البحث لاحقاً من سجل الأبحاث.');
   };
 
   const handleDownload = async (id: string, researchTitle: string) => {

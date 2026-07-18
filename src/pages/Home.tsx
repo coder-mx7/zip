@@ -20,25 +20,26 @@ export default function Home() {
   };
 
   return (
-    <div dir="rtl" lang="ar" className="min-h-screen bg-[#050505] text-white font-sans selection:bg-[var(--color-gold-500)] selection:text-black overflow-x-hidden">
+    <div className="min-h-screen bg-[#050505] text-white font-sans selection:bg-[var(--color-gold-500)] selection:text-black overflow-x-hidden">
       {/* Navbar */}
       <nav className="fixed top-0 w-full z-50 bg-[#050505]/80 backdrop-blur-xl border-b border-white/5 transition-all duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-row-reverse justify-between items-center h-20">
-            <div className="flex items-center gap-3">
-              <div className="relative flex items-center justify-center">
-                <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[var(--color-gold-400)]/40 to-orange-600/40 blur-xl" />
-                <div className="relative w-14 h-14 rounded-2xl border border-[var(--color-gold-500)]/40 bg-gradient-to-br from-[#1f1a0f] via-[#2d2310] to-[#0f0b04] flex items-center justify-center shadow-[0_0_30px_rgba(212,175,55,0.35)] ring-1 ring-white/10">
-                  <div className="absolute inset-[4px] rounded-[14px] border border-[var(--color-gold-400)]/30" />
-                  <Sparkles className="w-7 h-7 text-[var(--color-gold-400)]" />
+          <div className="flex justify-between items-center h-20">
+            <div className="flex items-center gap-3 group">
+              <div className="relative">
+                <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-fuchsia-500 via-violet-500 to-cyan-400 blur-xl opacity-70 group-hover:opacity-100 transition-all duration-500" />
+                <div className="relative w-12 h-12 rounded-2xl bg-gradient-to-br from-fuchsia-500 via-violet-500 to-cyan-400 p-[1px] shadow-[0_0_24px_rgba(192,132,252,0.35)]">
+                  <div className="flex h-full w-full items-center justify-center rounded-[14px] bg-[#050505]">
+                    <Search className="w-6 h-6 text-transparent bg-gradient-to-br from-fuchsia-400 via-violet-400 to-cyan-400 bg-clip-text" />
+                  </div>
                 </div>
               </div>
-              <div className="flex flex-col">
-                <span className="text-2xl font-black tracking-[0.25em] bg-gradient-to-r from-white via-[var(--color-gold-400)] to-orange-400 bg-clip-text text-transparent">
-                  linouch
+              <div className="flex flex-col leading-none">
+                <span className="text-2xl font-black tracking-[0.2em] bg-gradient-to-r from-fuchsia-400 via-violet-400 to-cyan-400 bg-clip-text text-transparent drop-shadow-[0_0_12px_rgba(34,211,238,0.25)]">
+                  Linouch
                 </span>
-                <span className="text-[11px] font-semibold uppercase tracking-[0.35em] text-gray-400">
-                  Research Studio
+                <span className="text-[10px] uppercase tracking-[0.35em] text-gray-400 mt-1">
+                  AI Research
                 </span>
               </div>
             </div>
@@ -122,7 +123,7 @@ export default function Home() {
                 transition={{ duration: 0.6, delay: 0.2 }}
                 className="text-xl md:text-2xl text-gray-300 mb-10 leading-relaxed font-medium"
               >
-                منصة <strong className="text-white">MX7SARECH</strong> تعتمد على أضخم قواعد البيانات والمكتبات العالمية، لتقدم لك بحوثاً دقيقة، موثقة، ومنسقة في ثوانٍ معدودة.
+                منصة <strong className="text-white">Linouch</strong> تعتمد على أضخم قواعد البيانات والمكتبات العالمية، لتقدم لك بحوثاً دقيقة، موثقة، ومنسقة في ثوانٍ معدودة.
               </motion.p>
               
               <motion.div
@@ -278,7 +279,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
             <div className="md:col-span-2">
-              <span className="text-2xl font-black text-white mb-6 block">MX7SARECH</span>
+              <span className="text-2xl font-black mb-6 block bg-gradient-to-r from-fuchsia-400 via-violet-400 to-cyan-400 bg-clip-text text-transparent">Linouch</span>
               <p className="text-gray-400 text-lg leading-relaxed max-w-md">
                 المنصة الأولى عربياً للبحث الأكاديمي الذكي. نجمع بين قوة الذكاء الاصطناعي وضخامة المكتبات العالمية.
               </p>

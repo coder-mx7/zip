@@ -3,12 +3,16 @@ import axios from 'axios';
 
 const AuthContext = createContext<any>(null);
 
-// في الإنتاج نستخدم نفس الدومين الحالي بإرسال الطلبات إلى مسار نسبي.
-const VITE_API_URL = import.meta.env.VITE_API_URL?.replace(/\/$/, '');
-const API_BASE = VITE_API_URL ?? (import.meta.env.PROD ? '' : 'https://zip-7x7y.onrender.com');
+// الاستخدام الموحد: في التطوير نستخدم مسارًا نسبيًا عبر Vite proxy، وفي الإنتاج
+// نستخدم VITE_API_URL عند توفره وإلا نفس النطاق.
+const VITE_API_URL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+const API_BASE = VITE_API_URL || '';
 const api = axios.create({
   baseURL: API_BASE,
   withCredentials: true,
+  headers: {
+    'Content-Type': 'application/json',
+  },
 });
 
 if (import.meta.env.PROD) {

@@ -67,39 +67,78 @@ export function processFootnotes(text: string, sourcesMap: { [key: string]: stri
 // 📄 دالة إنشاء صفحة الغلاف
 // ============================================================
 export function createCoverPage(data: ResearchData): Paragraph[] {
+    const FONT = "Sakkal Majalla";
+    const PLACEHOLDER = "................";
+    const currentYear = new Date().getFullYear();
+
+    // بدائل نقطية أنيقة بدل ظهور "undefined" أو فراغات مكسورة
+    const university = (data.university || "").trim() || "اسم الجامعة";
+    const faculty = (data.faculty || "").trim();
+    const department = (data.department || "").trim();
+    // نبني سطر الكلية/القسم بمرونة حتى لو غاب أحدهما
+    const facultyLine = [faculty, department].filter(Boolean).join("  -  ") || "الكلية - القسم";
+    const students = (data.students || []).filter(s => s && s.trim());
+    const studentsText = students.length ? students.join("  /  ") : PLACEHOLDER;
+    const doctorText = (data.doctorName || "").trim() || PLACEHOLDER;
+    const titleText = (data.title || "").trim() || "عنوان البحث";
+
     return [
         new Paragraph({
             alignment: AlignmentType.CENTER,
-            spacing: { before: 800, after: 400 },
+            bidirectional: true,
+            spacing: { before: 600, after: 300, line: 360 },
             children: [
-                new TextRun({ text: "الجمهورية الجزائرية الديمقراطية الشعبية", bold: true, size: 32 }),
-                new TextRun({ text: `\nوزارة التعليم العالي والبحث العلمي`, size: 28, break: 1 }),
-                new TextRun({ text: `\n${data.university || "اسم الجامعة"}`, size: 28, bold: true, break: 1 }),
-                new TextRun({ text: `\n${data.faculty || "الكلية"} - ${data.department || "القسم"}`, size: 26, break: 1 }),
+                new TextRun({ text: "الجمهورية الجزائرية الديمقراطية الشعبية", bold: true, size: 32, font: FONT }),
+                new TextRun({ text: "وزارة التعليم العالي والبحث العلمي", size: 28, font: FONT, break: 1 }),
             ],
         }),
         new Paragraph({
             alignment: AlignmentType.CENTER,
-            spacing: { before: 1200, after: 1200 },
+            bidirectional: true,
+            spacing: { before: 300, after: 200, line: 360 },
             children: [
-                new TextRun({ text: "تقرير بحث حول:", size: 32, italics: true }),
-                new TextRun({ text: `\n${data.title}`, size: 48, bold: true, color: "2E74B5", break: 1 }),
+                new TextRun({ text: university, size: 30, bold: true, font: FONT }),
+                new TextRun({ text: facultyLine, size: 26, font: FONT, break: 1 }),
+            ],
+        }),
+        new Paragraph({
+            alignment: AlignmentType.CENTER,
+            bidirectional: true,
+            spacing: { before: 1400, after: 200 },
+            children: [
+                new TextRun({ text: "تقرير بحث حول:", size: 30, italics: true, font: FONT }),
+            ],
+        }),
+        new Paragraph({
+            alignment: AlignmentType.CENTER,
+            bidirectional: true,
+            spacing: { before: 200, after: 1400, line: 400 },
+            children: [
+                new TextRun({ text: titleText, size: 48, bold: true, color: "2E74B5", font: FONT }),
             ],
         }),
         new Paragraph({
             alignment: AlignmentType.RIGHT,
             bidirectional: true,
-            spacing: { before: 1000 },
+            spacing: { before: 800, after: 120, line: 360 },
             children: [
-                new TextRun({ text: `إعداد الطلبة: ${data.students?.join(' / ') || '................'}`, size: 28, bold: true }),
-                new TextRun({ text: `\nتحت إشراف الدكتور: ${data.doctorName || '................'}`, size: 28, bold: true, break: 1 }),
+                new TextRun({ text: `إعداد الطلبة:  ${studentsText}`, size: 28, bold: true, font: FONT }),
+            ],
+        }),
+        new Paragraph({
+            alignment: AlignmentType.RIGHT,
+            bidirectional: true,
+            spacing: { before: 120, after: 800, line: 360 },
+            children: [
+                new TextRun({ text: `تحت إشراف الدكتور:  ${doctorText}`, size: 28, bold: true, font: FONT }),
             ],
         }),
         new Paragraph({
             alignment: AlignmentType.CENTER,
-            spacing: { before: 1500 },
+            bidirectional: true,
+            spacing: { before: 1200 },
             children: [
-                new TextRun({ text: `السنة الجامعية: ${new Date().getFullYear()} / ${new Date().getFullYear() + 1}`, size: 24 }),
+                new TextRun({ text: `السنة الجامعية:  ${currentYear} / ${currentYear + 1}`, size: 24, font: FONT }),
             ],
         }),
         new Paragraph({ children: [new PageBreak()] })

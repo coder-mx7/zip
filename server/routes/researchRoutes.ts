@@ -27,10 +27,7 @@ router.get('/generate/:id', researchController.startGeneration);
 router.get('/status/:id', researchController.getResearchStatus);
 router.get('/history', researchController.getHistory);
 router.get('/download/:id', researchController.downloadWord);
-router.post('/generate', checkPoints(10), researchController.generateResearch);
 router.post('/generate/debug', researchController.generateResearchDebug);
 router.post('/single-demand', checkPoints(1), researchController.generateSingleDemand);
-router.post('/single-demand/debug', researchController.generateSingleDemandDebug);
-router.post('/custom-simple-plan', researchController.generateCustomSimplePlan); // Endpoint جديد للمصفحة
 
 export default router;

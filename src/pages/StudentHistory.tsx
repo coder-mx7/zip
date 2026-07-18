@@ -30,10 +30,13 @@ export default function StudentHistory() {
 
   const handleDownload = async (id: string, researchTitle: string) => {
     try {
-      const res = await api.get(`/api/research/${id}/word`, {
+      const res = await api.get(`/api/research/download/${id}`, {
         responseType: 'blob'
       });
-      saveAs(res.data, `${researchTitle}.docx`);
+      const blob = new Blob([res.data], {
+        type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      });
+      saveAs(blob, `${researchTitle}.docx`);
       console.log('✅ File downloaded successfully');
     } catch (err: any) {
       const errorMsg = err.response?.data?.error || 'حدث خطأ أثناء تحميل الملف';

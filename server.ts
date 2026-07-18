@@ -45,72 +45,65 @@ const startServer = async () => {
     };
     await seedAdmin();
 
-    // تفعيل CORS بشكل ديناميكي اعتمادًا على متغيرات البيئة وروابط Render الفعلية
     const allowedOrigins = [
       'http://localhost:5173',
       'http://localhost:5174',
       'http://localhost:3001',
+      'http://127.0.0.1:5173',
+      'http://127.0.0.1:3001',
+      'https://localhost:5173',
+      'https://127.0.0.1:5173',
       process.env.CLIENT_URL,
       process.env.FRONTEND_URL,
       process.env.RENDER_EXTERNAL_URL,
+      process.env.CORS_ORIGIN,
+      process.env.VITE_API_URL,
     ]
       .flatMap(value => (value || '').split(','))
       .map(value => value.trim())
       .filter(Boolean)
       .map(normalizeOrigin);
 
-    const allowAllCors = process.env.ALLOW_ALL_CORS === 'true';
+    const isAllowedOrigin = (origin: string | undefined) => {
+      if (!origin) return true;
 
-    if (allowAllCors) {
-      console.warn('⚠️ ALLOW_ALL_CORS=true - permitting all origins temporarily (use only for debugging)');
-      app.use(cors({
-        origin: true,
-        credentials: true,
-        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-        allowedHeaders: ['Content-Type', 'Authorization'],
-      }));
-      app.options('*', cors());
-    } else {
-      // Build a set of allowed hostnames for a more permissive match (ignores protocol/port differences)
-      const allowedHostnames = allowedOrigins
-        .map(o => {
-          try {
-            return new URL(o).hostname;
-          } catch (e) {
-            return o.replace(/^https?:\/\//, '').replace(/:\d+$/, '');
-          }
-        })
-        .filter(Boolean);
+      const normalizedOrigin = normalizeOrigin(origin);
+      if (allowedOrigins.includes(normalizedOrigin)) return true;
 
-      app.use(cors({
-        origin: (origin: any, callback: any) => {
-          // Allow requests with no Origin (curl, server-to-server, same-origin)
-          console.log('➡️ CORS check - incoming origin:', origin);
-          if (!origin) return callback(null, true);
+      try {
+        const incomingHostname = new URL(normalizedOrigin).hostname;
+        return (
+          incomingHostname === 'localhost' ||
+          incomingHostname === '127.0.0.1' ||
+          incomingHostname.endsWith('.onrender.com') ||
+          incomingHostname.endsWith('.render.com') ||
+          incomingHostname.endsWith('.vercel.app') ||
+          incomingHostname.endsWith('.netlify.app')
+        );
+      } catch (e) {
+        return false;
+      }
+    };
 
-          // Extract hostname from the incoming origin and compare
-          let incomingHostname = origin;
-          try {
-            incomingHostname = new URL(origin).hostname;
-          } catch (e) {
-            incomingHostname = origin.replace(/^https?:\/\//, '').replace(/:\d+$/, '');
-          }
+    app.use((req: any, res: any, next: any) => {
+      const origin = req.headers.origin as string | undefined;
 
-          console.log('   allowedHostnames:', allowedHostnames);
-          if (allowedHostnames.includes(incomingHostname)) {
-            console.log('   ✅ Origin allowed (hostname match):', incomingHostname);
-            return callback(null, true);
-          }
+      if (origin && isAllowedOrigin(origin)) {
+        res.setHeader('Access-Control-Allow-Origin', origin);
+        res.setHeader('Access-Control-Allow-Credentials', 'true');
+        res.setHeader('Vary', 'Origin');
+        res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
+        res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+        res.setHeader('Access-Control-Expose-Headers', 'Content-Type, Authorization');
+      }
 
-          console.warn('   ❌ Origin not allowed (hostname mismatch):', incomingHostname);
-          return callback(new Error(`Not allowed by CORS: ${origin}`));
-        },
-        credentials: true,
-        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-        allowedHeaders: ['Content-Type', 'Authorization'],
-      }));
-      app.options('*', cors());
-    }
+      if (req.method === 'OPTIONS') {
+        res.status(204).end();
+        return;
+      }
+
+      next();
+    });
 
     app.use(express.json());
     app.use(express.urlencoded({ extended: true }));
